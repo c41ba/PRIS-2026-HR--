@@ -1,57 +1,201 @@
-# HR Assistant (Recruitment Helper) — Mid-term Prototype (Weeks 3–10)
+# HR Assistant: AI‑помощник для рекрутинга
 
-This project is a university prototype for the course **Design and Development of Intelligent Systems**.  
-It implements functionality **only up to Weeks 9–10 (Mid-term prototype)**.
+## Описание
 
-## What it demonstrates
+**HR Assistant** — учебный проект для поддержки работы рекрутера: анализ резюме (текст + изображение), автоматическое извлечение навыков, оценка соответствия вакансии и базовое решение Accept/Reject.
 
-- Rule-based filtering (Week 3)
-- Candidate data model (Week 4)
-- Streamlit UI (Week 5)
-- NLP skill extraction with spaCy (Week 6)
-- OCR resume text extraction with EasyOCR (Week 7)
-- Similarity search with TF-IDF + cosine similarity (Week 8)
-- Integrated pipeline connecting all modules (Weeks 9–10)
+Цель проекта: собрать понятный **дашборд для оценки кандидата** и реализовать базовую “умную” логику вокруг резюме (навыки, правила, похожесть на вакансию).
 
-## Project structure
+---
 
-```
-hr_assistant/
-weeks/
-  week3_rules.py
-  week4_data_model.py
-  week5_interface.py
-  week6_nlp.py
-  week7_cv.py
-  week8_similarity.py
-  week9_pipeline.py
+## Функциональность (по этапам/неделям)
+
+### 1) Правила отбора кандидатов (Week 3 — Rule-based Engine)
+
+* Задача: принять решение **Accept / Reject** по кандидату.
+* Правила:
+  * минимальный опыт (в годах) — например, от 1 года;
+  * наличие обязательных навыков (Python, SQL и др.).
+* Результат:
+  * решение: `Accept` или `Reject`;
+  * список причин (недостаток опыта, отсутствующие навыки).
+
+### 2) Модель данных кандидата (Week 4 — Candidate Data Model)
+
+* Задача: хранить информацию о кандидате в удобном виде.
+* Сущность `Candidate`:
+  * имя;
+  * опыт в годах;
+  * список навыков;
+  * текст резюме.
+* Дополнительно:
+  * нормализация навыков (нижний регистр, без пустых строк);
+  * добавление новых навыков;
+  * сериализация в словарь (для логирования/таблиц).
+
+### 3) Интерфейс на Streamlit (Week 5 — UI)
+
+* Задача: сделать удобный **дашборд для HR**.
+* Основные элементы:
+  * поле **Job description** — описание вакансии;
+  * поле **Resume text** — текст резюме;
+  * **загрузка изображения резюме** (фото/скан);
+  * кнопка **Analyze Candidate**.
+* Результаты:
+  * Detected Skills — найденные навыки;
+  * Decision — Accept / Reject;
+  * Similarity Score — похожесть резюме и вакансии (0–1);
+  * таблица с кратким резюме ввода и статуса анализа.
+
+### 4) NLP‑анализ резюме (Week 6 — spaCy Skills Extraction)
+
+* Задача: автоматически извлечь навыки из текста резюме.
+* Подход:
+  * библиотека **spaCy**;
+  * `PhraseMatcher` по заранее заданному списку навыков.
+* Поддерживаемые навыки:
+  * `Python`, `SQL`, `Java`, `Docker`, `Machine Learning`, `Data Analysis`.
+* Особенность:
+  * при отсутствии модели `en_core_web_sm` модуль использует **fallback** на `spacy.blank("en")`, чтобы прототип не падал.
+
+### 5) Чтение резюме с изображения (Week 7 — OCR)
+
+* Задача: распознать текст резюме по загруженному изображению.
+* Подход:
+  * библиотека **EasyOCR**;
+  * преобразование байт изображения → RGB‑массив → OCR.
+* Результат:
+  * распознанный текст резюме;
+  * средняя уверенность (`confidence_avg`) по всем найденным фрагментам.
+* Дополнительно:
+  * вспомогательная функция, которая после OCR сразу запускает NLP‑извлечение навыков.
+
+### 6) Оценка похожести резюме и вакансии (Week 8 — Similarity)
+
+* Задача: оценить, насколько текст резюме близок к описанию вакансии.
+* Подход:
+  * `TfidfVectorizer` (scikit‑learn) + `cosine_similarity`.
+* Результат:
+  * числовой **similarity score** в диапазоне **0–1**.
+
+### 7) Интеграция всех модулей (Weeks 9–10 — Pipeline)
+
+* Задача: связать в один поток:
+  * UI → OCR → NLP → правила → TF‑IDF similarity → результат.
+* Этапы пайплайна:
+  1. Если загружено изображение резюме, выполняется OCR, и его текст заменяет текст из поля Resume text.
+  2. NLP‑модуль извлекает навыки из итогового текста резюме.
+  3. Правиловой движок принимает решение Accept/Reject (опыт + навыки).
+  4. TF‑IDF‑модуль считает сходство резюме и вакансии.
+* Выход:
+  * список обнаруженных навыков;
+  * решение (Accept / Reject);
+  * similarity score (0–1);
+  * причины Reject (если есть);
+  * флаг, использовался ли OCR, и средняя уверенность;
+  * финальный текст резюме, по которому шёл анализ.
+
+---
+
+## Реализовано в учебной версии
+
+* **Week 3 — Rule-based Engine**  
+   * Логика Accept/Reject по опыту и навыкам.  
+   * Поддержка одиночного кандидата и пакетной фильтрации.
+
+* **Week 4 — Candidate Data Model**  
+   * Класс `Candidate` с полями `name`, `experience`, `skills`, `resume_text`.  
+   * Методы нормализации и добавления навыков.
+
+* **Week 5 — Streamlit Dashboard**  
+   * UI с полями для job description, resume text и загрузки изображения.  
+   * Кнопка **Analyze Candidate** и зона результатов с метриками.
+
+* **Week 6 — spaCy NLP Skills Extraction**  
+   * Извлечение навыков по фиксированному списку через `PhraseMatcher`.  
+   * Fallback на `spacy.blank("en")`, если `en_core_web_sm` отсутствует.
+
+* **Week 7 — OCR (EasyOCR)**  
+   * Чтение текста с изображения резюме, расчёт средней уверенности.  
+   * Объединение с NLP для автоматического извлечения навыков из OCR‑текста.
+
+* **Week 8 — TF‑IDF Similarity**  
+   * Оценка похожести резюме и вакансии по TF‑IDF и cosine similarity.
+
+* **Weeks 9–10 — Integration Pipeline**  
+   * Сквозной пайплайн: OCR → NLP → правила → similarity → структурированный результат для UI.
+
+---
+
+## Tech Stack
+
+Текущее:
+
+* `python` — основной язык разработки  
+* `streamlit` — UI/дашборд (форма ввода + отображение результатов)  
+* `spacy` — NLP, извлечение навыков по тексту резюме  
+* `scikit-learn` — TF‑IDF векторизация и cosine similarity  
+* `easyocr` — OCR по изображениям резюме  
+* `pandas` — табличное представление результатов/данных (по необходимости)
+
+Планируется по мере усложнения (опционально, за пределами mid‑term):
+
+* Хранение истории кандидатов: `sqlite` / `postgres`  
+* Расширенный NLP (дополнительные модели и сущности)  
+* Более сложные ML‑модели для scoring и ранжирования кандидатов
+
+---
+
+## Структура проекта
+
+```text
+weeks/                     # Модули по неделям курса
+  week3_rules.py           # Week 3 — правиловой движок (Accept/Reject)
+  week4_data_model.py      # Week 4 — модель данных: класс Candidate
+  week5_interface.py       # Week 5 — Streamlit UI (форма и результаты)
+  week6_nlp.py             # Week 6 — spaCy NLP: извлечение навыков
+  week7_cv.py              # Week 7 — OCR резюме (EasyOCR)
+  week8_similarity.py      # Week 8 — TF-IDF + cosine similarity
+  week9_pipeline.py        # Weeks 9–10 — интеграционный пайплайн
 ui/
-  app.py
-modules/
-  __init__.py
-data/
-requirements.txt
-README.md
+  app.py                   # Точка входа Streamlit-приложения
+data/                      # (опционально) тестовые данные/резюме
+requirements.txt           # Зависимости проекта
+README.md                  # Описание проекта (этот файл)
 ```
 
-## Install
+---
+
+## Архитектура (потоки данных)
+
+```mermaid
+graph TD
+    U[Рекрутер] -->|Заполняет форму| UI[Streamlit UI]
+
+    UI -->|Job description + Resume text| PIPE[Integration Pipeline]
+    UI -->|Изображение резюме| OCR_IN[Изображение]
+
+    OCR_IN --> OCR[OCR (EasyOCR)]
+    OCR -->|Текст резюме (OCR)| PIPE
+
+    PIPE --> NLP[NLP (spaCy skills)]
+    NLP --> RULES[Rule-based Engine]
+    PIPE --> SIM[TF-IDF Similarity]
+
+    RULES --> RES[Результат: Accept/Reject]
+    SIM --> RES
+
+    RES -->|Detected Skills, Decision, Similarity Score, причины| UI
+```
+
+---
+
+## Установка и запуск
 
 ```bash
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
-```
-
-## Run
-
-```bash
 streamlit run ui/app.py
 ```
 
-## Notes / limitations (by course requirement)
-
-- No authentication
-- No backend REST API
-- No database
-- No deployment
-- No advanced ML training (Weeks 11–15 are intentionally not implemented)
-
+После запуска в браузере откроется дашборд **“HR Assistant — AI Recruitment Tool”**.
