@@ -175,17 +175,17 @@ graph TD
     UI -->|Job description + Resume text| PIPE[Integration Pipeline]
     UI -->|Изображение резюме| OCR_IN[Изображение]
 
-    OCR_IN --> OCR[OCR (EasyOCR)]
-    OCR -->|Текст резюме (OCR)| PIPE
+    OCR_IN --> OCR["OCR (EasyOCR)"]
+    OCR -->|"Текст резюме (OCR)"| PIPE
 
-    PIPE --> NLP[NLP (spaCy skills)]
+    PIPE --> NLP["NLP (spaCy skills)"]
     NLP --> RULES[Rule-based Engine]
     PIPE --> SIM[TF-IDF Similarity]
 
     RULES --> RES[Результат: Accept/Reject]
     SIM --> RES
 
-    RES -->|Detected Skills, Decision, Similarity Score, причины| UI
+    RES --> UI
 ```
 
 ---
